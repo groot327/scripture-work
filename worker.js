@@ -29,19 +29,27 @@ export default {
         });
       }
 
-      // Prompt tailored to output structured Scripture Scanner sections in JSON format
-      const prompt = `You are a biblical study assistant mimicking the 'Scripture Scanner' app style. 
+      // Prompt tailored to output Scripture Scanner sections in a clear JSON format
+      const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output shown in image_0.png and image_1.png.
+
 Analyze the passage: "${reference}" - "${verseText}".
 
 Provide your response in raw JSON format (without markdown code blocks) using this exact structure:
 {
-  "summary": "A concise 2-3 sentence overview of the core message.",
-  "historicalContext": "Historical, cultural, and authorship background.",
-  "originalLanguage": [
-    {"word": "Original Greek/Hebrew term", "transliteration": "English pronunciation", "meaning": "Detailed meaning and Strong's definition"}
+  "summary": "A concise, detailed summary (2-3 sentences) of the central theme and message.",
+  "popularInterpretations": [
+    { "source": "Commentary Name or Author (e.g., Wiersbe Bible Commentary)", "interpretation": "Detailed, specific interpretation point from this source." },
+    { "source": "Holman Bible Handbook (1992)", "interpretation": "Another detailed interpretation point." }
   ],
-  "crossReferences": [
-    {"reference": "Book Chapter:Verse", "reason": "Brief explanation of connection"}
+  "possibleTakeaways": [
+    "List of actionable, spiritual takeaways for the believer.",
+    "Another practical application point.",
+    "A takeaway focusing on relationship with God."
+  ],
+  "interestingFact": "One compelling, unique historical, linguistic, or cultural fact about this specific verse.",
+  "relatedVerses": [
+    { "reference": "Book Chapter:Verse", "reason": "Explanation of thematic connection." },
+    { "reference": "Another Book Chapter:Verse", "reason": "Another cross-reference connection." }
   ]
 }`;
 
@@ -69,6 +77,8 @@ Provide your response in raw JSON format (without markdown code blocks) using th
       
       // Clean up markdown code fences if Gemini returns them
       const cleanedJsonString = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+      
+      // We parse and re-stringify to ensure valid JSON and clean structure
       const parsedAnalysis = JSON.parse(cleanedJsonString);
 
       return new Response(JSON.stringify(parsedAnalysis), {
