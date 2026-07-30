@@ -14,7 +14,7 @@ export default {
 
     // Support GET requests just for testing the URL
     if (request.method === "GET") {
-      return new Response(JSON.stringify({ status: "Worker is running" }), {
+      return new Response(JSON.stringify({ status: "Worker is running - New Code Active" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -36,8 +36,8 @@ export default {
         });
       }
 
-      // Updated Prompt Tailored for Scripture Scanner outputs seen in image_0.png and image_1.png
-      const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output. 
+      // Prompt tailored to output Scripture Scanner sections in a clear JSON format
+      const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output shown in image_0.png and image_1.png.
 
 Analyze the passage: "${reference}" - "${verseText}".
 
@@ -84,14 +84,7 @@ Provide your response in raw JSON format (without markdown code blocks) using th
       
       // Clean up markdown code fences if Gemini returns them
       const cleanedJsonString = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-      
-      // Try to parse the response to validate it
-      let parsedAnalysis;
-      try {
-        parsedAnalysis = JSON.parse(cleanedJsonString);
-      } catch (e) {
-        throw new Error("Gemini did not return valid JSON analysis.");
-      }
+      const parsedAnalysis = JSON.parse(cleanedJsonString);
 
       return new Response(JSON.stringify(parsedAnalysis), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
