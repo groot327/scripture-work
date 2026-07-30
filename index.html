@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scripture Insights</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <h1>Scripture Insights</h1>
+      <p class="subtitle">Daily verse & deep contextual commentary</p>
+    </header>
+
+    <!-- Daily Verse Section -->
+    <section class="card daily-card">
+      <div class="card-badge">Daily Verse</div>
+      <h2 id="daily-ref">Loading daily verse...</h2>
+      <p id="daily-text" class="passage-body"></p>
+      <button id="analyze-daily-btn" class="btn secondary-btn" style="display: none;">Scan Daily Verse</button>
+    </section>
+
+    <!-- Lookup Input Section -->
+    <section class="card input-card">
+      <h2>Search Scripture</h2>
+      <form id="lookup-form">
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="verse-input" 
+            placeholder="e.g. John 3:16 or Romans 8:1-4" 
+            required 
+            autocomplete="off"
+          />
+          <button type="submit" class="btn primary-btn">Search & Scan</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Loading Indicator -->
+    <div id="loading-spinner" class="spinner-container hidden">
+      <div class="spinner"></div>
+      <p>Consulting Gemini for context, original terms, and cross-references...</p>
+    </div>
+
+    <!-- Active Passage Header -->
+    <section id="passage-container" class="card passage-card hidden">
+      <h2 id="passage-ref"></h2>
+      <blockquote id="passage-text" class="passage-body"></blockquote>
+    </section>
+
+    <!-- Insights Results Grid (Scripture Scanner Style) -->
+    <div id="results-container" class="results-grid hidden">
+      
+      <div class="card insight-card">
+        <h3>Overview & Summary</h3>
+        <p id="res-summary"></p>
+      </div>
+
+      <div class="card insight-card">
+        <h3>Historical & Cultural Context</h3>
+        <p id="res-history"></p>
+      </div>
+
+      <div class="card insight-card">
+        <h3>Original Language & Key Words</h3>
+        <div id="res-language" class="word-list"></div>
+      </div>
+
+      <div class="card insight-card">
+        <h3>Related Cross-References</h3>
+        <ul id="res-cross-ref" class="cross-ref-list"></ul>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
