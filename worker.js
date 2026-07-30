@@ -1,15 +1,22 @@
 export default {
   async fetch(request, env) {
-    // CORS headers allowing your GitHub Pages site to communicate with this worker
+    // CORS headers allow your GitHub Pages site to communicate with this worker
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
 
     // Handle preflight browser checks
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    // Support GET requests just for testing the URL
+    if (request.method === "GET") {
+      return new Response(JSON.stringify({ status: "Worker is running" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     if (request.method !== "POST") {
@@ -29,8 +36,8 @@ export default {
         });
       }
 
-      // Prompt tailored to output Scripture Scanner sections in a clear JSON format
-      const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output shown in image_0.png and image_1.png.
+      // Updated Prompt Tailored for Scripture Scanner outputs seen in image_0.png and image_1.png
+      const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output. 
 
 Analyze the passage: "${reference}" - "${verseText}".
 
@@ -78,8 +85,13 @@ Provide your response in raw JSON format (without markdown code blocks) using th
       // Clean up markdown code fences if Gemini returns them
       const cleanedJsonString = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
       
-      // We parse and re-stringify to ensure valid JSON and clean structure
-      const parsedAnalysis = JSON.parse(cleanedJsonString);
+      // Try to parse the response to validate it
+      let parsedAnalysis;
+      try {
+        parsedAnalysis = JSON.parse(cleanedJsonString);
+      } catch (e) {
+        throw new Error("Gemini did not return valid JSON analysis.");
+      }
 
       return new Response(JSON.stringify(parsedAnalysis), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
