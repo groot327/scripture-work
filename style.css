@@ -158,37 +158,22 @@ input[type="text"]:focus {
   padding-bottom: 6px;
 }
 
-.word-item {
+/* Specific section styling mimicking images */
+.interp-item, .takeaway-item, .cross-ref-item {
   margin-bottom: 12px;
   padding-left: 8px;
   border-left: 2px solid var(--accent);
 }
 
-.word-title {
+.interp-source, .ref-tag {
   font-weight: bold;
   color: #fff;
-}
-
-.word-meaning {
   font-size: 0.9rem;
+}
+
+.interp-text, .takeaway-text, .ref-reason {
+  font-size: 0.95rem;
   color: var(--text-muted);
-}
-
-.cross-ref-list {
-  list-style-type: none;
-}
-
-.cross-ref-list li {
-  margin-bottom: 8px;
-  padding: 6px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-}
-
-.ref-tag {
-  font-weight: bold;
-  color: var(--accent);
-  margin-right: 6px;
 }
 
 .hidden {
@@ -200,3 +185,4 @@ input[type="text"]:focus {
     grid-template-columns: 1fr 1fr;
   }
 }
+
