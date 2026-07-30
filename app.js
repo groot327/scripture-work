@@ -93,30 +93,43 @@ async function fetchGeminiInsights(reference, verseText) {
 // 5. Render Structured Insights Output
 function renderInsights(data) {
   document.getElementById("res-summary").innerText = data.summary || "No summary available.";
-  document.getElementById("res-history").innerText = data.historicalContext || "No context available.";
+  document.getElementById("res-fact").innerText = data.interestingFact || "No interesting fact available.";
 
-  // Words breakdown
-  const wordContainer = document.getElementById("res-language");
-  wordContainer.innerHTML = "";
-  if (data.originalLanguage && Array.isArray(data.originalLanguage)) {
-    data.originalLanguage.forEach(item => {
+  // Render Interpretations
+  const interpContainer = document.getElementById("res-interpretations");
+  interpContainer.innerHTML = "";
+  if (data.popularInterpretations && Array.isArray(data.popularInterpretations)) {
+    data.popularInterpretations.forEach(item => {
       const div = document.createElement("div");
-      div.className = "word-item";
+      div.className = "interp-item";
       div.innerHTML = `
-        <div class="word-title">${item.word} (<em>${item.transliteration}</em>)</div>
-        <div class="word-meaning">${item.meaning}</div>
+        <div class="interp-source">${item.source}:</div>
+        <div class="interp-text">${item.interpretation}</div>
       `;
-      wordContainer.appendChild(div);
+      interpContainer.appendChild(div);
     });
   }
 
-  // Cross references
+  // Render Takeaways (Bulleted list)
+  const takeawayContainer = document.getElementById("res-takeaways");
+  takeawayContainer.innerHTML = "";
+  if (data.possibleTakeaways && Array.isArray(data.possibleTakeaways)) {
+    data.possibleTakeaways.forEach(text => {
+      const li = document.createElement("li");
+      li.className = "takeaway-item";
+      li.innerHTML = `<span class="takeaway-text">${text}</span>`;
+      takeawayContainer.appendChild(li);
+    });
+  }
+
+  // Render Related Verses
   const crossRefContainer = document.getElementById("res-cross-ref");
   crossRefContainer.innerHTML = "";
-  if (data.crossReferences && Array.isArray(data.crossReferences)) {
-    data.crossReferences.forEach(item => {
+  if (data.relatedVerses && Array.isArray(data.relatedVerses)) {
+    data.relatedVerses.forEach(item => {
       const li = document.createElement("li");
-      li.innerHTML = `<span class="ref-tag">${item.reference}:</span> ${item.reason}`;
+      li.className = "cross-ref-item";
+      li.innerHTML = `<span class="ref-tag">${item.reference}:</span> <span class="ref-reason">${item.reason}</span>`;
       crossRefContainer.appendChild(li);
     });
   }
