@@ -36,8 +36,8 @@ export default {
         });
       }
 
-      // Prompt tailored to output Scripture Scanner sections in a clear JSON format
-      const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output shown in image_0.png and image_1.png.
+      // Prompt tailored to output Scripture Scanner sections.
+      const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output.
 
 Analyze the passage: "${reference}" - "${verseText}".
 
@@ -84,6 +84,8 @@ Provide your response in raw JSON format (without markdown code blocks) using th
       
       // Clean up markdown code fences if Gemini returns them
       const cleanedJsonString = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+      
+      // We parse and re-stringify to ensure valid JSON and clean structure
       const parsedAnalysis = JSON.parse(cleanedJsonString);
 
       return new Response(JSON.stringify(parsedAnalysis), {
