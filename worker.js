@@ -1,26 +1,23 @@
 export default {
   async fetch(request, env) {
-    // CORS headers allow your GitHub Pages site to communicate with this worker
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
 
-    // Handle preflight browser checks
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Support GET requests just for testing the URL
     if (request.method === "GET") {
-      return new Response(JSON.stringify({ status: "Worker is running - New Code Active" }), {
+      return new Response(JSON.stringify({ status: "Worker is running" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     if (request.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Only POST requests allowed" }), {
+      return new Response(JSON.stringify({ error: "Only POST allowed" }), {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -30,13 +27,13 @@ export default {
       const { reference, verseText } = await request.json();
 
       if (!reference || !verseText) {
-        return new Response(JSON.stringify({ error: "Missing scripture input" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+        throw new Error("Missing input: reference or verseText.");
       }
 
-      // Prompt tailored to output Scripture Scanner sections.
+      if (!env.GEMINI_API_KEY) {
+        throw new Error("CRITICAL ERROR: GEMINI_API_KEY environment variable is missing in Cloudflare Settings.");
+      }
+
       const prompt = `You are a biblical study assistant mimicking the style and layout of the 'Scripture Scanner' app output.
 
 Analyze the passage: "${reference}" - "${verseText}".
@@ -60,40 +57,69 @@ Provide your response in raw JSON format (without markdown code blocks) using th
   ]
 }`;
 
-      // Call Google Gemini API
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+      // Updated model target
+      const modelName = "gemini-2.0-flash";
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
+      console.log(`Calling Gemini API (${modelName})...`);
       const apiResponse = await fetch(geminiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
       });
 
       if (!apiResponse.ok) {
-        const errText = await apiResponse.text();
-        return new Response(JSON.stringify({ error: "Gemini API error", details: errText }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+        const errorText = await apiResponse.text();
+        console.error("Gemini API Error Response:", errorText);
+
+        // Auto-diagnostic: If 404, list available models in logs
+        if (apiResponse.status === 404) {
+          try {
+            const modelsListRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${env.GEMINI_API_KEY}`);
+            const modelsListData = await modelsListRes.json();
+            const availableModels = modelsListData.models
+              ?.filter(m => m.supportedGenerationMethods?.includes("generateContent"))
+              ?.map(m => m.name) || [];
+            console.log("AVAILABLE MODELS FOR YOUR KEY:", JSON.stringify(availableModels));
+          } catch (listErr) {
+            console.error("Could not fetch models list:", listErr.message);
+          }
+        }
+
+        throw new Error(`Gemini API call failed with status ${apiResponse.status}. See logs for details.`);
       }
 
       const data = await apiResponse.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      console.log("Gemini API successful response.");
+
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       
-      // Clean up markdown code fences if Gemini returns them
+      if (!rawText) {
+        console.error("Gemini Response Structure (data):", JSON.stringify(data, null, 2));
+        throw new Error("CRITICAL ERROR: Gemini returned a successful response, but it contained no parseable analysis text.");
+      }
+      
       const cleanedJsonString = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
       
-      // We parse and re-stringify to ensure valid JSON and clean structure
-      const parsedAnalysis = JSON.parse(cleanedJsonString);
+      let parsedAnalysis;
+      try {
+        parsedAnalysis = JSON.parse(cleanedJsonString);
+      } catch (jsonErr) {
+        console.error("Failed to parse Gemini JSON output:", cleanedJsonString);
+        throw new Error("CRITICAL ERROR: Gemini returned data, but it was not valid JSON. See logs.");
+      }
 
       return new Response(JSON.stringify(parsedAnalysis), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
 
     } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), {
+      console.error("Worker Crash (Caught Exception):", err.message);
+      
+      return new Response(JSON.stringify({ 
+        error: "Internal Server Error",
+        message: err.message
+      }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
