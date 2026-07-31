@@ -1,5 +1,5 @@
 // REPLACE THIS URL WITH YOUR CLOUDFLARE WORKER URL
-const WORKER_URL = "https://scripture-proxy.groot327.workers.dev/";
+const WORKER_URL = "https://scripture-proxy.groot327.workers.dev/?v=cachebreak1";
 
 let currentDaily = { reference: "", text: "" };
 
